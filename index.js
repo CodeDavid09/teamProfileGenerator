@@ -1,12 +1,15 @@
-const employee = require('./lib/employee')
-const engineer = require('./lib/engineer')
-const intern = require('./lib/intern')
-const manager = require('./lib/manager')
+const Employee = require('./lib/employee')
+const Engineer = require('./lib/engineer')
+const Intern = require('./lib/intern')
+const Manager = require('./lib/manager')
 const fs = require("fs");
 const inquirer = require("inquirer");
-const { clear } = require('console');
-const { choices } = require('yargs');
+const path = require("path");
+const OUTPUTDIR = path.resolve(__dirname, "output")
+const outputPath = path.join(OUTPUTDIR, "team.html")
+const renderer = require("./src/pagetemplate.js")
 
+let idArray = [];
 let teamArray = [];
 
 function initialPrompt() {
@@ -38,15 +41,20 @@ function addManager() {
             message: "What is your Manager's office number?",
             name: "officeNumber"
         },
+        {
+            message: "What is this Managers id?",
+            name: "managerid"
+        }
     ])
 
         .then(function (data) {
             const name = data.name
             const email = data.email
             const officeNumber = data.officeNumber
-            const id = 1
-            const teamMember = new manager(name, email, officeNumber)
+            const id = data.managerid
+            const teamMember = new Manager(name, email, officeNumber)
             teamArray.push(teamMember)
+            idArray.push(id)
             addteamMember();
         });
 }
@@ -90,16 +98,21 @@ function addEngineer() {
         {
             message: "What is this engineer's Github?",
             name: "github"
+        },
+        {
+            message: "What is this Engineers id?",
+            name: "engineerid"
         }
     ])
 
         .then(function (data) {
             const name = data.name
-            const id = teamArray.length + 1
+            const id = data.engineerid
             const email = data.email
             const github = data.github
-            const teamMember = new engineer(name, id, email, github)
+            const teamMember = new Engineer(name, id, email, github)
             teamArray.push(teamMember)
+            idArray.push(id)
             addteamMember()
         });
 
@@ -118,21 +131,34 @@ function addIntern() {
         {
             message: "what is the intern's school?",
             name: "school"
+        },
+        {
+            message: "What is this Interns id?",
+            name: "internid"
         }
     ])
 
         .then(function (data) {
             const name = data.name
-            const id = teamArray.length + 1
+            const id = data.internid
             const email = data.email
             const school = data.school
-            const teamMember = new intern(name, id, email, school)
+            const teamMember = new Intern(name, id, email, school)
             teamArray.push(teamMember)
+            idArray.push(id)
             addteamMember()
         });
 
 };
 
+
+
 function compileTeam() {
+    if (!fs.existsSync(OUTPUTDIR)) {
+        fs.mkdirSync(OUTPUTDIR)
+    }
+    fs.writeFileSync(outputPath, render (teamArray), 'utf8')
     console.log("Team is compiled!")
 }
+
+initialPrompt()
